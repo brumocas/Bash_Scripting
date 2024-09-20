@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# -----------------------
+# Pyenv Setup
+# -----------------------
+# Adds Pyenv to the PATH and initializes it for managing Python versions.
+
+export PATH="$HOME/.pyenv/bin:$PATH"
+if command -v pyenv 1>/dev/null 2>&1; then
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+fi
+
+# -----------------------
+# CUDA Setup
+# -----------------------
+# Configure the environment for CUDA 11.8 for GPU computation.
+# Adjust the paths if needed to reflect your CUDA installation.
+
+export CUDA_HOME=/usr/local/cuda-11.8
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
+
+# -----------------------
+# Docker GPU Command Function
+# -----------------------
+# Function to run a Docker container with full GPU access and specified resources.
+# Arguments:
+#   $1: Docker image to run
+#   $2: Host path to interface (e.g., local folder)
+#   $3: Docker container path to interface (e.g., container folder)
+
+docker_run_com_interface() {
+  sudo docker run \
+    --gpus all \               # Access all available GPUs
+    --rm -ti \                 # Remove the container after exit, interactive terminal
+    --net=host \               # Use host networking
+    --ipc=host \               # Share host's IPC namespace
+    -e DISPLAY=$DISPLAY \      # Forward display for GUI apps
+    -v $2:$3 \                 # Mount host directory to container directory
+    -v /tmp/.X11-unix:/tmp/.X11-unix \   # Enable X11 forwarding
+    -v $XAUTHORITY:/tmp/.XAuthority \    # X11 authorization for GUI apps
+    -e XAUTHORITY=/tmp/.XAuthority \     # X11 authorization file
+    --env="QT_X11_NO_MITSHM=1" \         # Fix shared memory issues with X11
+    $1 /bin/bash               # Run the Docker image specified in param $1
+}
+
+
+# -----------------------
+# Aliases
+# -----------------------
+# Get github tokken to push
+alias gt='echo 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'
+
