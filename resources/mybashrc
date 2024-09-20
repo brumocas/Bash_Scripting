@@ -50,5 +50,5 @@ docker_run_com_interface() {
 # Aliases
 # -----------------------
 # Get github tokken to push
-alias gt='echo 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'
+alias gt='echo your git tokken'
 
