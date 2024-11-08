@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Function to get Ubuntu version
+get_ubuntu_version() {
+    # Check if the /etc/os-release file exists (present in Ubuntu)
+    if [[ -f /etc/os-release ]]; then
+        . /etc/os-release  # Source the os-release file
+        OS_NAME=$ID         # Ubuntu will have ID=ubuntu
+        OS_VERSION=$VERSION_ID  # Extract the version like "20.04", "18.04", etc.
+    else
+        OS_NAME="unknown"
+        OS_VERSION="unknown"
+    fi
+}
+
+# Call the function to retrieve the version
+get_ubuntu_version
+
+# Run commands based on the OS and version
+if [[ "$OS_NAME" == "ubuntu" ]]; then
+    
+    if [[ "$OS_VERSION" == "20.04" ]]; then    
+        echo "Ubuntu 20.04"
+        # ----------------------
+	# ROS1 Source
+	# ----------------------
+	# Check if ROS 1 (Noetic) is installed and source the environment
+	# Source the ROS Noetic setup file if it exists
+	if [ -f "/opt/ros/noetic/setup.bash" ]; then
+	    source /opt/ros/noetic/setup.bash
+	    source /home/bruno/catkin_ws/devel/setup.bash
+	    echo "ROS Noetic environment sourced."
+	else
+	    echo "ROS Noetic is not installed."
+	fi
+	
+    elif [[ "$OS_VERSION" == "22.04" ]]; then
+        echo "Ubuntu 22.04"
+	# -----------------------
+	# Pyenv Setup
+	# -----------------------
+	# Adds Pyenv to the PATH and initializes it for managing Python versions.
+	
+	# Bug here check correction
+	#export PATH="$HOME/.pyenv/bin:$PATH"
+	#if command -v pyenv 1>/dev/null 2>&1; then
+	#     eval "$(pyenv init --path)"
+	#    eval "$(pyenv init -)"
+	#fi
+        
+    else
+        echo "Ubuntu $OS_VERSION"
+        # Add default commands
+    fi
+else
+    echo "Unknown or non-Ubuntu system - doing nothing."
+fi
+
+
+# -----------------------
+# CUDA Setup
+# -----------------------
+# Configure the environment for CUDA 11.8 for GPU computation.
+# Adjust the paths if needed to reflect your CUDA installation.
+
+export CUDA_HOME=/usr/local/cuda-11.8
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
+
+
+# -----------------------
+# Docker GPU Command Function
+# -----------------------
+# Function to run a Docker container with full GPU access and specified resources.
+# Arguments:
+#   $1: Docker image to run
+#   $2: Host path to interface (e.g., local folder)
+#   $3: Docker container path to interface (e.g., container folder)
+
+docker_run_com_interface() {
+  sudo docker run \
+    --gpus all \               # Access all available GPUs
+    --rm -ti \                 # Remove the container after exit, interactive terminal
+    --net=host \               # Use host networking
+    --ipc=host \               # Share host's IPC namespace
+    -e DISPLAY=$DISPLAY \      # Forward display for GUI apps
+    -v $2:$3 \                 # Mount host directory to container directory
+    -v /tmp/.X11-unix:/tmp/.X11-unix \   # Enable X11 forwarding
+    -v $XAUTHORITY:/tmp/.XAuthority \    # X11 authorization for GUI apps
+    -e XAUTHORITY=/tmp/.XAuthority \     # X11 authorization file
+    --env="QT_X11_NO_MITSHM=1" \         # Fix shared memory issues with X11
+    $1 /bin/bash               # Run the Docker image specified in param $1
+}
+
+
+# -----------------------
+# Aliases
+# -----------------------
+# Get github tokken to push
+alias gt='echo my_tokken'
+# Docker root command
+alias docker='sudo docker'
+# Run ros1 distro
+alias ros1='distrobox enter ros_noetic'
+# Run ubuntu 20.04 distro
+alias 20.04='distrobox enter 20.04'
+# Run nvisii distro
+alias nvisii='distrobox enter nvisii'
+# Get distro
+alias distro='lsb_release -a'
